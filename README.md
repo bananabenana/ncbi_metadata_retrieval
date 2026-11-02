@@ -12,8 +12,25 @@ mamba install -y -n ncbi_metadata_retrieval conda-forge::parallel
 mamba activate ncbi_metadata_retrieval
 ```
 
+Use Entrez Direct to download targeted metadata from NCBI using BioSample IDs
+```bash
+# Run in parallel (n=4)
+cat BioSample_list_NCBI.txt | parallel -j 4 --delay 3 '
+  output="BioSample_metadata/{}_metadata.xml"
+
+  if [[ ! -f "$output" ]] || [[ ! -s "$output" ]]; then
+    esearch -db biosample -query "{}" \
+      | esummary -mode xml \
+      > "$output"
+  else
+    echo "File $output exists and is non-empty, skipping {}"
+  fi
+'
+```
+
 Use Entrez Direct to download targeted metadata from NCBI using assembly accessions
 ```bash
+# Run in parallel (n=4)
 cat assemblies.txt | parallel -j 4 --delay 3 '
   output="BioSample_metadata/{}_metadata.xml"
 
@@ -43,7 +60,7 @@ wget https://ftp.ncbi.nlm.nih.gov/biosample/biosample_set.xml.gz
 
 # Run script
 python BioProject_from_BioSample.py \
-    --biosample_list BioProjects_list_NCBI.txt \
+    --biosample_list BioSample_list_NCBI.txt \
     --ncbi_xml biosample_set.xml.gz \
     --output biosample_bioproject.tsv \
     --log biosample_progress.log
@@ -56,7 +73,7 @@ wget ftp://ftp.ncbi.nlm.nih.gov/sra/reports/Metadata/SRA_Accessions.tab
 
 # Run script
 python BioProject_from_SRA.py \
-    --biosample_list BioProjects_list_NCBI.txt \
+    --biosample_list BioSample_list_NCBI.txt \
     --sra_tab SRA_Accessions.tab \
     --output biosample_bioproject_from_sra.tsv
 ```
@@ -74,7 +91,7 @@ GCA_039725545.1
 GCA_054130465.1
 ```
 
-### Example BioProjects_list_NCBI.txt
+### Example BioSample_list_NCBI.txt
 ```
 SAMD00000816
 SAMD00002818
@@ -84,3 +101,5 @@ SAMD00008944
 ```
 
 
+## Author
+Ben Vezina
